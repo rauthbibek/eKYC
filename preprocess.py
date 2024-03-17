@@ -2,30 +2,31 @@ import cv2
 import numpy as np
 import os
 
-def read_image(image_path, is_uploaded = False):
-  if is_uploaded:
-    try:
-    # Read image using OpenCV
-        image_bytes = image_path.read()
-        img = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
-        if img is None:
-            raise Exception("Failed to read image: {}".format(image_path))
-        return img
-    except Exception as e:
-       print("Error reading image:", e)
-       return None
-  else:
-    try:
-        img = cv2.imread(image_path)
-        if img is None:
-            raise Exception("Failed to read image: {}".format(image_path))
-        return img
-    except Exception as e:
-        print("Error reading image:", e)
-        return None
+def read_image(image_path, is_uploaded=False):
+    if is_uploaded:
+        try:
+            # Read image using OpenCV
+            image_bytes = image_path.read()
+            img = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+            if img is None:
+                raise Exception("Failed to read image: {}".format(image_path))
+            return img
+        except Exception as e:
+            print("Error reading image:", e)
+            return None
+    else:
+        try:
+            img = cv2.imread(image_path)
+            if img is None:
+                raise Exception("Failed to read image: {}".format(image_path))
+            return img
+        except Exception as e:
+            print("Error reading image:", e)
+            return None
+
   
 
-def extract_id_card(img):
+def extract_id_card(img, output_path = "data\\02_intermediate_data"):
     """
     Extracts the ID card from an image containing other backgrounds.
 
@@ -71,8 +72,16 @@ def extract_id_card(img):
     # - Apply bilateral filtering for noise reduction
     # filtered_img = cv2.bilateralFiltering(img[y:y+h, x:x+w], 9, 75, 75)
     # - Morphological operations (e.g., erosion, dilation) for shape refinement
+    current_wd = os.getcwd()
+    filename = os.path.join(current_wd,output_path, "contour_id.jpg")
+    contour_id = img[y:y+h, x:x+w]
+    if os.path.exists(filename):
+        # Remove the existing file
+        os.remove(filename)
 
-    return img[y:y+h, x:x+w] 
+    cv2.imwrite(filename, contour_id)
+
+    return contour_id, filename
 
 
 def save_image(image, filename, path="."):
@@ -87,6 +96,10 @@ def save_image(image, filename, path="."):
 
   # Construct the full path
   full_path = os.path.join(path, filename)
+
+  if os.path.exists(full_path):
+        # Remove the existing file
+        os.remove(full_path)
 
   # Save the image using cv2.imwrite
   cv2.imwrite(full_path, image)
