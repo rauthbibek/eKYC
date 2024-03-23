@@ -4,5 +4,6 @@ data/train/
 new_env/
 extra_files/
 __pycache__/*
-data/*
+data/01_raw_data/bibek*
 Scripts/
+.streamlit/secrets.toml

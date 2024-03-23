@@ -1,3 +1,4 @@
+import cv2
 import streamlit as st
 from preprocess import read_image, extract_id_card, save_image
 from ocr_engine import extract_text
@@ -36,7 +37,7 @@ def set_custom_theme():
 # Sidebar
 def sidebar_section():
     st.sidebar.title("Select ID Card Type")
-    option = st.sidebar.selectbox("", ("Aadhar", "PAN"))
+    option = st.sidebar.selectbox("", ("PAN", " "))
     return option
 
 # Header
@@ -66,11 +67,13 @@ def main_content(image_file, face_image_file):
                 # Display ID card image
                 with col1:
                     st.header("ID Card Image")
+                    image_roi = cv2.cvtColor(image_roi, cv2.COLOR_BGR2RGB)
                     st.image(image_roi, use_column_width=True, caption="ID card")
 
                 # Display uploaded face image
                 with col2:
                     st.header("Uploaded Face Image")
+                    face_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB)
                     st.image(face_image, use_column_width=True, caption="Uploaded Face")
 
                 # Display extracted information
