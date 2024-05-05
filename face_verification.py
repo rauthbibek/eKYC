@@ -1,10 +1,26 @@
 import face_recognition
+from deepface import DeepFace
 import numpy as np
 import cv2
 import os
+import logging
+from utils import file_exists, read_yaml
 
 
-def detect_and_extract_face(img, cascade_path="data\\models\\haarcascade_frontalface_default.xml", output_path = "data\\02_intermediate_data"):
+logging_str = "[%(asctime)s: %(levelname)s: %(module)s]: %(message)s"
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+logging.basicConfig(filename=os.path.join(log_dir,"ekyc_logs.log"), level=logging.INFO, format=logging_str, filemode="a")
+
+
+config_path = "config.yaml"
+config = read_yaml(config_path)
+
+artifacts = config['artifacts']
+cascade_path = artifacts['HAARCASCADE_PATH']
+output_path = artifacts['INTERMIDEIATE_DIR']
+
+def detect_and_extract_face(img):
 
     # Read the image
     # img = cv2.imread(image_path)
@@ -62,7 +78,14 @@ def detect_and_extract_face(img, cascade_path="data\\models\\haarcascade_frontal
     else:
         return None
 
-def face_comparison(image1_path="data\\02_intermediate_data\\extracted_face.jpg", image2_path = "data\\02_intermediate_data\\face_image.jpg"):
+def face_recog_face_comparison(image1_path="data\\02_intermediate_data\\extracted_face.jpg", image2_path = "data\\02_intermediate_data\\face_image.jpg"):
+
+    img1_exists = file_exists(image1_path)
+    img2_exists = file_exists(image2_path)
+
+    if img1_exists and img2_exists:
+        print("Check the path for the images provided")
+        return False
 
     image1 = face_recognition.load_image_file(image1_path)
     image2 = face_recognition.load_image_file(image2_path)
@@ -91,6 +114,52 @@ def face_comparison(image1_path="data\\02_intermediate_data\\extracted_face.jpg"
     else:
         # print("The faces are not similar.")
         return False
+    
+def deepface_face_comparison(image1_path="data\\02_intermediate_data\\extracted_face.jpg", image2_path = "data\\02_intermediate_data\\face_image.jpg"):
+    # img_path1 = "data\\01_raw_data\\bibek_face.jpg"
+    # img_path2 = "data\\01_raw_data\\bibek_face2.jpg"
+    # data\01_raw_data\bibek_face.jpg
+    img1_exists = file_exists(image1_path)
+    img2_exists = file_exists(image2_path)
+
+    if not(img1_exists or img2_exists):
+        print("Check the path for the images provided")
+        return False
+    
+    verfication = DeepFace.verify(img1_path=image1_path, img2_path=image2_path)
+
+    if len(verfication) > 0 and verfication['verified']:
+        print("Faces are verified")
+        return True
+    else:
+        return False
+
+def face_comparison(image1_path, image2_path, model_name = 'deepface'):
+
+    is_verified = False
+    if model_name == 'deepface':
+        is_verified = deepface_face_comparison(image1_path, image2_path)
+    elif model_name ==  'facerecognition':
+        is_verified = face_recog_face_comparison(image1_path, image2_path)
+    else:
+        print("Mention proper model name for face recognition")
+
+    return is_verified
+
+def get_face_embeddings(image_path):
+
+    img_exists = file_exists(image_path)
+
+    if not(img_exists):
+        print("Check the path for the images provided")
+        return None
+    
+    embedding_objs = DeepFace.represent(img_path = image_path, model_name = "Facenet")
+    embedding = embedding_objs[0]["embedding"]
+
+    if len(embedding) > 0:
+        return embedding
+    return None
 
 
 if __name__ == "__main__":
